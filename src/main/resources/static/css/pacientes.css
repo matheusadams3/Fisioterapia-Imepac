@@ -94,12 +94,6 @@
   padding-left: 15px;
 }
 
-/*<div class="editable-field">*/
-.editable-field {
-  background-color: #fff;
-  transition: all 0.2s ease;
-}
-
 .editable-field:hover {
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
 }
@@ -113,4 +107,57 @@
 
 .custom-gap {
     row-gap:32px;
+}
+
+.editable-field {
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  min-height: 38px;
+}
+
+.consulta-item {
+  background-color: white;
+  border-left: 4px solid #0d6efd;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+}
+
+.consulta-item:hover {
+  transform: translateX(5px);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+}
+
+.consulta-item.presenca {
+  border-left-color: #28a745;
+}
+
+.consulta-item.falta {
+  border-left-color: #dc3545;
+}
+
+.consulta-item.falta_justificada {
+  border-left-color: #fd7e14;
+}
+
+.consulta-item.alta_temporaria {
+  border-left-color: #90ee90;
+}
+
+.consulta-data {
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.consulta-tipo {
+  font-weight: 500;
+  color: #495057;
+}
+
+.badge-status {
+  font-size: 0.75rem;
+  padding: 4px 8px;
 }
