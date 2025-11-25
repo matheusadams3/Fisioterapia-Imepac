@@ -1,6 +1,6 @@
 /* Hover da tabela pacientes*/
 .table-custom tbody tr:hover td {
-  background-color: #0059ff !important;
+  background-color: #679cff !important;
   color: white !important;
 }
 
@@ -10,8 +10,8 @@
 }
 
 .table-custom tbody tr:hover td button {
-  background-color: transparent !important;
-  color: white !important;
+  background-color: transparent;
+  color: white;
 }
 
 /*<section id="legendaDestaque">Paciente com diabetes</section>*/
@@ -78,8 +78,8 @@
 }
 
 .table-custom td.bg-diabetes {
-  background-color: #3c84d6 !important;
-  color: white !important;
+  background-color: #3c84d6;
+  color: white;
 }
 
 /*Barra de busca especifica*/
@@ -102,4 +102,15 @@
 
 .editable-field:hover {
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Quando passar o mouse na linha, botão excluir fica vermelho preenchido */
+.table-custom tbody tr:hover .btn-excluir {
+  background-color: #dc3545 !important;
+  border-color: #dc3545 !important;
+  color: white !important;
+}
+
+.custom-gap {
+    row-gap:32px;
 }

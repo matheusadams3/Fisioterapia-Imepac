@@ -113,9 +113,6 @@ document.addEventListener("DOMContentLoaded", () => {
             <td>${p.observacoesGerais || "—"}</td>
             <td>${idade}</td>
             <td>
-                <button class="btn btn-sm btn-outline-primary btn-editar me-1" data-id="${p.id}">
-                    <i class="bi bi-pencil"></i>
-                </button>
                 <button class="btn btn-sm btn-outline-danger btn-excluir ms-1" data-id="${p.id}">
                     <i class="bi bi-trash"></i>
                 </button>
