@@ -1,0 +1,105 @@
+/* Hover da tabela pacientes*/
+.table-custom tbody tr:hover td {
+  background-color: #0059ff !important;
+  color: white !important;
+}
+
+.table-custom tbody tr:hover td input {
+  background-color: transparent !important;
+  color: inherit !important;
+}
+
+.table-custom tbody tr:hover td button {
+  background-color: transparent !important;
+  color: white !important;
+}
+
+/*<section id="legendaDestaque">Paciente com diabetes</section>*/
+#legendaDestaque {
+  font-size: 16px;
+  font-weight: 500;
+  color: #007bff;
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+#legendaDestaque i {
+  font-size: 20px;
+  color: #007bff;
+}
+
+#legendaDestaque span {
+  margin-left: 8px;
+}
+
+/*<table class="table table-custom"> e à célula com diabetes (.bg-diabetes)*/
+.table-custom {
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  width: 100% !important;
+}
+
+.table-custom thead {
+  background-color: #f2f4f8;
+  color: #333;
+  font-weight: 600;
+}
+
+.table-custom th {
+  border-bottom: 2px solid #e0e0e0;
+  padding: 12px 16px;
+  font-size: 0.95rem;
+  background-color: #f8f9fc;
+  color: #555;
+  font-weight: 600;
+}
+
+.table-custom td {
+  padding: 12px 16px;
+  color: #444;
+  vertical-align: middle;
+}
+
+.table-custom button {
+  border-radius: 6px;
+  padding: 4px 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.2s;
+}
+
+.table-custom button:hover {
+  background-color: #4a90e2;
+  color: #fff;
+  border-color: #4a90e2;
+}
+
+.table-custom td.bg-diabetes {
+  background-color: #3c84d6 !important;
+  color: white !important;
+}
+
+/*Barra de busca especifica*/
+.tabelaPacientes h2 {
+  color: #112052;
+  font-weight: 600;
+}
+
+.tabelaPacientes .search-bar input {
+  max-width: 300px;
+  border-radius: 30px;
+  padding-left: 15px;
+}
+
+/*<div class="editable-field">*/
+.editable-field {
+  background-color: #fff;
+  transition: all 0.2s ease;
+}
+
+.editable-field:hover {
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.1);
+}

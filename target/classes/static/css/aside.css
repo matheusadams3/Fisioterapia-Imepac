@@ -1,0 +1,39 @@
+.logo-container {
+  text-align: center;
+  padding: 20px 0;
+}
+
+.logo-container img {
+  width: 120px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+.sidebar {
+  background-color: #112052;
+  width: 240px;
+  min-height: 100vh;
+  border-top-right-radius: 40px;
+  border-bottom-right-radius: 40px;
+}
+
+/* Hover nos links do menu */
+.sidebar .nav-link {
+  border-radius: 8px;
+  transition: background-color 0.2s ease, padding-left 0.2s ease;
+}
+
+/* Hover effect */
+.sidebar .nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.15); /* fundo suave */
+  padding-left: 20px; /* leve deslocamento para a direita */
+  color: #ffffff;
+}
+
+/* Estado ativo (Calendário no seu caso) */
+.sidebar .nav-link.active {
+  background-color: rgba(255, 255, 255, 0.25);
+  font-weight: 600;
+  border-radius: 8px;
+}

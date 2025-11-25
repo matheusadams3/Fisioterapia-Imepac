@@ -1,0 +1,46 @@
+  #calendar {
+        flex: 1;
+        min-height: 500px;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      .fc {
+        font-size: 14px;
+      }
+
+      .legenda-container {
+        width: 220px;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        height: fit-content;
+      }
+
+      .legenda-container h6 {
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: #333;
+      }
+
+      .legenda-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+        font-size: 14px;
+      }
+
+      .legenda-cor {
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+        margin-right: 10px;
+        flex-shrink: 0;
+      }
+
+      .legenda-item span {
+        color: #555;
+      }

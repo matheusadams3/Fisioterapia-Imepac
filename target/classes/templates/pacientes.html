@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pacientes - Clínica</title>
+
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/pacientes.css" />
+    <link rel="stylesheet" href="/css/aside.css" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body>
+    <div class="d-flex">
+      <aside class="sidebar d-flex flex-column align-items-center p-3">
+        <div class="logo-container">
+          <img src="/images/logo-fisiologia.svg" alt="Logo" class="logo-img" onerror="this.style.display='none'; this.parentElement.innerHTML='<h5 style=color:#fff>FISIO</h5>'" />
+        </div>
+
+        <ul class="nav flex-column w-100">
+          <li class="nav-item mb-2">
+            <a
+              href="/"
+              class="nav-link text-white d-flex align-items-center px-3"
+            >
+              <i class="bi bi-house me-2"></i> Início
+            </a>
+          </li>
+          <li class="nav-item mb-2">
+            <a
+              href="/pacientes"
+              class="nav-link text-white d-flex align-items-center px-3 active"
+            >
+              <i class="bi bi-person me-2"></i> Pacientes
+            </a>
+          </li>
+          <li class="nav-item mb-2">
+            <a
+              href="/calendario"
+              class="nav-link text-white d-flex align-items-center px-3"
+            >
+              <i class="bi bi-calendar me-2"></i> Calendário
+            </a>
+          </li>
+        </ul>
+      </aside>
+
+      <main class="flex-grow-1 p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h2 class="fw-semibold">Pacientes</h2>
+        </div>
+
+        <!-- Linha Superior -->
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <!-- Botao Filtros-->
+          <button
+            class="btn btn-outline-secondary d-flex align-items-center"
+            data-bs-toggle="offcanvas"
+            data-bs-target="#offcanvasFiltros"
+          >
+            <i class="bi bi-funnel me-2"></i> Filtros
+          </button>
+
+          <!-- Offcanvas Filtros -->
+          <div
+            class="offcanvas offcanvas-start"
+            tabindex="-1"
+            id="offcanvasFiltros"
+          >
+            <div class="offcanvas-header">
+              <h5 class="offcanvas-title">Filtros</h5>
+              <button
+                type="button"
+                class="btn-close"
+                data-bs-dismiss="offcanvas"
+              ></button>
+            </div>
+
+            <div class="offcanvas-body">
+              <form>
+                <!-- GENERO FILTRO-->
+                <div class="mb-3">
+                  <label class="form-label">Gênero</label>
+                  <select class="form-select" id="filtroGenero">
+                    <option value="">Todos</option>
+                    <option>Masculino</option>
+                    <option>Feminino</option>
+                  </select>
+                </div>
+
+                <!-- IDADE FILTRO-->
+                <div class="mb-3">
+                  <label class="form-label">Faixa etária</label>
+                  <select class="form-select" id="filtroIdade">
+                    <option value="">Todas</option>
+                    <option>Menores de 18</option>
+                    <option>18–30</option>
+                    <option>31–50</option>
+                    <option>Acima de 50</option>
+                  </select>
+                </div>
+
+                <!-- DIABETES FILTRO-->
+                <div class="mb-3">
+                  <label class="form-label">Diabetes</label>
+                  <select class="form-select" id="filtroDiabetes">
+                    <option value="">Todos</option>
+                    <option value="true">Sim</option>
+                    <option value="false">Não</option>
+                  </select>
+                </div>
+                
+                <!-- HIPERTENSO FILTRO-->
+                <div class="mb-3">
+                  <label class="form-label">Hipertenso</label>
+                  <select class="form-select" id="filtroHipertenso">
+                    <option value="">Todos</option>
+                    <option value="true">Sim</option>
+                    <option value="false">Não</option>
+                  </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">
+                  Aplicar filtros
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Barra busca -->
+          <div class="flex-grow-1">
+            <div class="search-bar position-relative" style="max-width: 400px">
+              <input
+                id="campoBusca"
+                type="text"
+                class="form-control ps-5 pe-5"
+                placeholder="Buscar paciente..."
+              />
+              <button
+                type="button"
+                id="btnBuscar"
+                class="btn btn-link position-absolute top-50 start-0 translate-middle-y ms-2 text-primary p-0"
+              >
+                <i class="bi bi-search fs-5"></i>
+              </button>
+            </div>
+          </div>
+
+          <!--Botao Adicionar Paciente -->
+          <button
+            class="btn btn-primary d-flex align-items-center"
+            data-bs-toggle="modal"
+            data-bs-target="#modalAdicionarPaciente"
+          >
+            <i class="bi bi-person-plus me-2"></i> Adicionar paciente
+          </button>
+        </div>
+
+        <!--Mensagem Tela Vazia -->
+        <div id="mensagemVazia" class="text-center mt-5">
+          <h5 class="fw-semibold text-secondary">
+            Sem pacientes por enquanto...
+          </h5>
+          <p class="text-muted">
+            Eles irão aparecer assim que você adicioná-los!
+          </p>
+        </div>
+
+        <section id="tabelaContainer" class="tabela-pacientes mt-4 d-none">
+          <!-- Tabela Pacientes -->
+          <div class="table-responsive shadow-sm rounded">
+            <section id="legendaDestaque" class="mt-4 mb-3">
+              <div class="d-flex align-items-center me-4">
+                <i class="bi bi-star-fill text-danger"></i>
+                <span class="ms-2">Paciente hipertenso</span>
+              </div>
+              <div class="d-flex align-items-center">
+                <i class="bi bi-star-fill text-primary"></i>
+                <span class="ms-2">Paciente com diabetes</span>
+              </div>
+            </section>
+            <table class="table align-middle table-custom">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>Telefone</th>
+                  <th>Endereço</th>
+                  <th>Observações</th>
+                  <th>Idade</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tabelaPacientes"></tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Modal Adicionar Paciente -->
+    <div class="modal fade" id="modalAdicionarPaciente" tabindex="-1">
+      <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content p-3">
+          <div class="modal-header border-0 pb-0">
+            <h5 class="modal-title fw-semibold">Adicionar paciente</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+
+          <div class="modal-body">
+            <form id="formPaciente">
+              <input type="hidden" id="idPaciente" />
+
+              <div class="row g-3">
+                <!-- Nome Completo -->
+                <div class="col-md-6">
+                  <label class="form-label">Nome completo</label>
+                  <input type="text" class="form-control" id="nomePaciente" required />
+                </div>
+
+                <!-- Data de Nascimento -->
+                <div class="col-md-3">
+                  <label class="form-label">Data de nascimento</label>
+                  <input type="date" class="form-control" id="dataNascimento" />
+                </div>
+
+                <!-- Genero -->
+                <div class="col-md-3">
+                  <label class="form-label">Gênero</label>
+                  <select class="form-select" id="generoPaciente">
+                    <option value="" disabled selected>Selecione</option>
+                    <option>Masculino</option>
+                    <option>Feminino</option>
+                    <option>Outro</option>
+                  </select>
+                </div>
+
+                <!-- Telefone 1-->
+                <div class="col-md-3">
+                  <label class="form-label">Telefone</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="telefonePaciente"
+                  />
+                </div>
+
+                <!-- Telefone 2-->
+                <div class="col-md-3">
+                  <label class="form-label">Telefone (secundário)</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="telefone2Paciente"
+                  />
+                </div>
+
+                <!-- Endereco -->
+                <div class="col-md-6">
+                  <label class="form-label">Endereço</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="enderecoPaciente"
+                  />
+                </div>
+
+                <!-- Sobre o paciente -->
+                <div class="col-md-12">
+                  <label class="form-label">Sobre o paciente</label>
+                  <input type="text" class="form-control" id="sobrePaciente" />
+                </div>
+
+                <!-- Obs gerais-->
+                <div class="col-md-7">
+                  <label class="form-label">Observações gerais</label>
+                  <input
+                    type="text"
+                    class="form-control"
+                    id="observacoesPaciente"
+                  />
+                </div>
+
+                <!-- Checkboxes -->
+                <div
+                  class="col-md-5 d-flex align-items-center gap-3 mt-4 flex-wrap"
+                >
+                  <!-- Checkbox diabetes -->
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="diabetesPaciente"
+                    />
+                    <label class="form-check-label" for="diabetesPaciente">Possui diabetes?</label>
+                  </div>
+
+                  <!-- Checkbox Hipertensao-->
+                  <div class="form-check">
+                    <input
+                      class="form-check-input"
+                      type="checkbox"
+                      id="hptsPaciente"
+                    />
+                    <label class="form-check-label" for="hptsPaciente">Hipertenso?</label>
+                  </div>
+                </div>
+
+                <div id="novosCampos"></div>
+
+                <div class="col-12">
+                  <button
+                    type="button"
+                    id="btnAdicionarCampo"
+                    class="btn btn-outline-secondary"
+                  >
+                    <i class="bi bi-plus-circle me-2"></i> Adicionar outro campo
+                  </button>
+                </div>
+              </div>
+
+              <div class="modal-footer border-0 pt-3">
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  data-bs-dismiss="modal"
+                >
+                  Cancelar
+                </button>
+                <button type="submit" class="btn btn-primary">Salvar</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Registro Paciente -->
+    <div
+      class="modal fade"
+      id="modalRegistroPaciente"
+      tabindex="-1"
+      aria-hidden="true"
+    >
+      <div
+        class="modal-dialog modal-dialog-centered modal-lg"
+      >
+        <div class="modal-content p-3">
+          <!-- Cabeçalho -->
+          <div class="modal-header border-0 pb-0">
+            <h5 class="modal-title fw-bold">Registro do Paciente</h5>
+            <input type="hidden" id="idPacienteRegistro" value="" />
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+
+          <div class="modal-body">
+            <!-- TÍTULOS DAS COLUNAS -->
+            <div class="row fw-semibold text-center border-bottom pb-2 mb-3">
+              <div class="col-4">Nome do Campo</div>
+              <div class="col-4">Última Medição</div>
+              <div class="col-4">Medição Atual</div>
+            </div>
+
+            <!-- LINHAS DO REGISTRO -->
+            <div class="row gy-3">
+              <!-- Nomes dos campos -->
+              <div class="col-4 d-flex flex-column gap-3">
+                <span class="label-row">Pressão Arterial (PA)</span>
+                <span class="label-row">Glicemia</span>
+                <span class="label-row">Escala de Dor</span>
+                <span class="label-row">O₂ (Saturação)</span>
+                <span class="label-row">BPM (Frequência Cardíaca)</span>
+                <span class="label-row">Observação</span>
+              </div>
+
+              <!-- Última medição (somente leitura) -->
+              <div class="col-4 d-flex flex-column gap-3">
+                <input id="ultima_pa" class="form-control" readonly />
+                <input id="ultima_glicemia" class="form-control" readonly />
+                <input id="ultima_dor" class="form-control" readonly />
+                <input id="ultima_o2" class="form-control" readonly />
+                <input id="ultima_bpm" class="form-control" readonly />
+                <input id="ultima_obs" class="form-control" readonly />
+              </div>
+
+              <!-- Medição atual (desabilitado até clicar EDITAR) -->
+              <div class="col-4 d-flex flex-column gap-3">
+                <input id="atual_pa" class="form-control" disabled />
+                <input id="atual_glicemia" class="form-control" disabled />
+                <input id="atual_dor" class="form-control" disabled />
+                <input id="atual_o2" class="form-control" disabled />
+                <input id="atual_bpm" class="form-control" disabled />
+                <input id="atual_obs" class="form-control" disabled />
+              </div>
+            </div>
+          </div>
+
+          <!-- Rodapé -->
+          <div class="modal-footer border-0">
+            <button
+              id="btnEditar"
+              class="btn btn-primary"
+            >
+              Editar
+            </button>
+
+            <button
+              id="btnSalvar"
+              class="btn btn-success d-none"
+            >
+              Salvar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/pacientes.js"></script>
+  </body>
+</html>
