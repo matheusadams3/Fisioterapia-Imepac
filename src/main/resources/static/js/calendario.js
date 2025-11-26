@@ -683,40 +683,104 @@ async function excluirConsulta(consultaId) {
   }
 }
 
-// Botão Medições do Paciente
-$("#btnMedicoesPaciente").on("click", function () {
-  $("#pacienteModal").modal("hide");
-  $("#modalMedicoesPaciente").modal("show");
-  // Carregar os dados do paciente aqui
-});
+// ===== MODAL MEDIÇÕES DO PACIENTE =====
 
-$('#btnMedicoesPaciente').on('click', function() {
-  // Pegar o nome do paciente do modal de detalhes
+// Botão Medições do Paciente - Abrir modal
+$(document).on('click', '#btnMedicoesPaciente', function() {
+  // Pegar dados do paciente
   const nomePaciente = $('#modalPacienteNome').text().replace('Nome:', '').trim();
+  const idConsulta = $('#btnExcluirConsulta').data('consulta-id') || '';
+  const idPaciente = $(this).data('paciente-id') || '';
   
   // Definir no modal de medições
   $('#nomePacienteMedicoes').text(nomePaciente);
+  $('#idPacienteMedicoes').val(idPaciente);
+  $('#idConsultaMedicoes').val(idConsulta);
+  
+  // Carregar medições existentes se houver (opcional)
+  carregarMedicoesExistentes(idConsulta);
   
   // Fechar modal de detalhes e abrir o de medições
   $('#pacienteModal').modal('hide');
   $('#modalMedicoesPaciente').modal('show');
 });
 
+// Função auxiliar para carregar medições existentes (opcional)
+function carregarMedicoesExistentes(idConsulta) {
+  if (!idConsulta) return;
+  
+  // Aqui você faria uma chamada ao backend para buscar medições já salvas
+  /*
+  fetch(`/api/medicoes/${idConsulta}`)
+    .then(response => response.json())
+    .then(data => {
+      if (data) {
+        // Preencher campos pré-consulta
+        $('#medicoes_pre_pa').val(data.pre?.pressaoArterial || '');
+        $('#medicoes_pre_glicemia').val(data.pre?.glicemia || '');
+        $('#medicoes_pre_dor').val(data.pre?.escalaDor || '');
+        $('#medicoes_pre_o2').val(data.pre?.saturacaoO2 || '');
+        $('#medicoes_pre_bpm').val(data.pre?.frequenciaCardiaca || '');
+        
+        // Preencher campos pós-consulta
+        $('#medicoes_pos_pa').val(data.pos?.pressaoArterial || '');
+        $('#medicoes_pos_glicemia').val(data.pos?.glicemia || '');
+        $('#medicoes_pos_dor').val(data.pos?.escalaDor || '');
+        $('#medicoes_pos_o2').val(data.pos?.saturacaoO2 || '');
+        $('#medicoes_pos_bpm').val(data.pos?.frequenciaCardiaca || '');
+        
+        // Preencher observações
+        $('#medicoes_observacao').val(data.observacao || '');
+        
+        // Verificar se deve desbloquear pós-consulta
+        verificarPreConsultaSalva();
+      }
+    })
+    .catch(error => console.error('Erro ao carregar medições:', error));
+  */
+  
+  // Simulação: Carregar do localStorage
+  const medicoesPreSalvas = localStorage.getItem(`medicoes_pre_${idConsulta}`);
+  if (medicoesPreSalvas) {
+    const dados = JSON.parse(medicoesPreSalvas);
+    $('#medicoes_pre_pa').val(dados.pressaoArterial || '');
+    $('#medicoes_pre_glicemia').val(dados.glicemia || '');
+    $('#medicoes_pre_dor').val(dados.escalaDor || '');
+    $('#medicoes_pre_o2').val(dados.saturacaoO2 || '');
+    $('#medicoes_pre_bpm').val(dados.frequenciaCardiaca || '');
+  }
+}
+
 // Função para salvar as medições
 $('#btnSalvarMedicoes').on('click', function() {
   const idPaciente = $('#idPacienteMedicoes').val();
   const idConsulta = $('#idConsultaMedicoes').val();
   
-  // Coletar os dados dos campos
+  // Coletar os dados dos campos PRÉ-CONSULTA
+  const medicoesPreConsulta = {
+    pressaoArterial: $('#medicoes_pre_pa').val(),
+    glicemia: $('#medicoes_pre_glicemia').val(),
+    escalaDor: $('#medicoes_pre_dor').val(),
+    saturacaoO2: $('#medicoes_pre_o2').val(),
+    frequenciaCardiaca: $('#medicoes_pre_bpm').val()
+  };
+  
+  // Coletar os dados dos campos PÓS-CONSULTA
+  const medicoesPosConsulta = {
+    pressaoArterial: $('#medicoes_pos_pa').val(),
+    glicemia: $('#medicoes_pos_glicemia').val(),
+    escalaDor: $('#medicoes_pos_dor').val(),
+    saturacaoO2: $('#medicoes_pos_o2').val(),
+    frequenciaCardiaca: $('#medicoes_pos_bpm').val()
+  };
+  
+  // Objeto completo com todas as medições
   const medicoes = {
     pacienteId: idPaciente,
     consultaId: idConsulta,
-    pressaoArterial: $('#medicoes_atual_pa').val(),
-    glicemia: $('#medicoes_atual_glicemia').val(),
-    escalaDor: $('#medicoes_atual_dor').val(),
-    saturacaoO2: $('#medicoes_atual_o2').val(),
-    frequenciaCardiaca: $('#medicoes_atual_bpm').val(),
-    observacao: $('#medicoes_atual_obs').val(),
+    preConsulta: medicoesPreConsulta,
+    posConsulta: medicoesPosConsulta,
+    observacao: $('#medicoes_observacao').val(),
     dataRegistro: new Date().toISOString()
   };
   
@@ -726,8 +790,22 @@ $('#btnSalvarMedicoes').on('click', function() {
     return;
   }
   
-  // Aqui você faria a chamada para o backend
-  // Exemplo com fetch:
+  // Verificar se pelo menos uma medição foi preenchida
+  const temPreConsulta = Object.values(medicoesPreConsulta).some(val => val && val.trim() !== '');
+  const temPosConsulta = Object.values(medicoesPosConsulta).some(val => val && val.trim() !== '');
+  
+  if (!temPreConsulta && !temPosConsulta) {
+    alert('Por favor, preencha pelo menos uma medição antes de salvar.');
+    return;
+  }
+  
+  // VALIDAÇÃO: Não permitir salvar pós-consulta sem ter pré-consulta salva
+  if (temPosConsulta && !verificarSeTemPreConsulta() && !temPreConsulta) {
+    alert('Você precisa salvar as medições de pré-consulta antes de adicionar as medições de pós-consulta.');
+    return;
+  }
+  
+  // Chamada para o backend
   /*
   fetch('/api/medicoes', {
     method: 'POST',
@@ -736,12 +814,25 @@ $('#btnSalvarMedicoes').on('click', function() {
     },
     body: JSON.stringify(medicoes)
   })
-  .then(response => response.json())
+  .then(response => {
+    if (!response.ok) {
+      throw new Error('Erro ao salvar medições');
+    }
+    return response.json();
+  })
   .then(data => {
     alert('Medições salvas com sucesso!');
+    
+    // Salvar no localStorage que pré-consulta foi salva (temporário)
+    if (temPreConsulta) {
+      localStorage.setItem(`medicoes_pre_${idConsulta}`, JSON.stringify(medicoesPreConsulta));
+    }
+    
     $('#modalMedicoesPaciente').modal('hide');
-    // Limpar os campos
     limparCamposMedicoes();
+    
+    // Recarregar o calendário ou atualizar a visualização
+    // calendar.refetchEvents();
   })
   .catch(error => {
     console.error('Erro ao salvar medições:', error);
@@ -751,6 +842,12 @@ $('#btnSalvarMedicoes').on('click', function() {
   
   // Por enquanto, apenas simulação
   console.log('Medições a serem salvas:', medicoes);
+  
+  // Salvar no localStorage que pré-consulta foi salva (simulação)
+  if (temPreConsulta) {
+    localStorage.setItem(`medicoes_pre_${idConsulta}`, JSON.stringify(medicoesPreConsulta));
+  }
+  
   alert('Medições salvas com sucesso!');
   $('#modalMedicoesPaciente').modal('hide');
   limparCamposMedicoes();
@@ -758,38 +855,147 @@ $('#btnSalvarMedicoes').on('click', function() {
 
 // Função para limpar os campos após salvar
 function limparCamposMedicoes() {
-  $('#medicoes_atual_pa').val('');
-  $('#medicoes_atual_glicemia').val('');
-  $('#medicoes_atual_dor').val('');
-  $('#medicoes_atual_o2').val('');
-  $('#medicoes_atual_bpm').val('');
-  $('#medicoes_atual_obs').val('');
+  // Limpar campos pré-consulta
+  $('#medicoes_pre_pa').val('');
+  $('#medicoes_pre_glicemia').val('');
+  $('#medicoes_pre_dor').val('');
+  $('#medicoes_pre_o2').val('');
+  $('#medicoes_pre_bpm').val('');
+  
+  // Limpar campos pós-consulta
+  $('#medicoes_pos_pa').val('');
+  $('#medicoes_pos_glicemia').val('');
+  $('#medicoes_pos_dor').val('');
+  $('#medicoes_pos_o2').val('');
+  $('#medicoes_pos_bpm').val('');
+  
+  // Limpar observações e IDs
+  $('#medicoes_observacao').val('');
   $('#idPacienteMedicoes').val('');
   $('#idConsultaMedicoes').val('');
   $('#nomePacienteMedicoes').text('-');
 }
 
-// Atualizar a função do botão Medições no modal de detalhes
-$(document).on('click', '#btnMedicoesPaciente', function() {
-  // Pegar dados do paciente
-  const nomePaciente = $('#modalPacienteNome').text().replace('Nome:', '').trim();
-  const idConsulta = $('#btnExcluirConsulta').data('consulta-id') || '';
-  
-  // Aqui você pode pegar o ID do paciente do elemento ou de uma variável global
-  // Por exemplo, se você armazenou em um data attribute:
-  const idPaciente = $(this).data('paciente-id') || '';
-  
-  // Definir no modal de medições
-  $('#nomePacienteMedicoes').text(nomePaciente);
-  $('#idPacienteMedicoes').val(idPaciente);
-  $('#idConsultaMedicoes').val(idConsulta);
-  
-  // Fechar modal de detalhes e abrir o de medições
-  $('#pacienteModal').modal('hide');
-  $('#modalMedicoesPaciente').modal('show');
-});
-
 // Limpar campos quando o modal for fechado
 $('#modalMedicoesPaciente').on('hidden.bs.modal', function() {
   limparCamposMedicoes();
 });
+
+// Validação em tempo real para escala de dor (0-10)
+$('#medicoes_pre_dor, #medicoes_pos_dor').on('input', function() {
+  const valor = parseInt($(this).val());
+  if (valor < 0) $(this).val(0);
+  if (valor > 10) $(this).val(10);
+});
+
+// Função para bloquear/desbloquear campos pós-consulta
+function verificarPreConsultaSalva() {
+  const idConsulta = $('#idConsultaMedicoes').val();
+  
+  if (!idConsulta) {
+    bloquearCamposPosConsulta(true);
+    return;
+  }
+  
+  // Verificar no backend se já existe medição pré-consulta salva
+  /*
+  fetch(`/api/medicoes/${idConsulta}/pre-consulta`)
+    .then(response => response.json())
+    .then(data => {
+      if (data && data.existe) {
+        // Se existe medição pré-consulta salva, desbloqueia pós-consulta
+        bloquearCamposPosConsulta(false);
+      } else {
+        // Se não existe, bloqueia pós-consulta
+        bloquearCamposPosConsulta(true);
+      }
+    })
+    .catch(error => {
+      console.error('Erro ao verificar pré-consulta:', error);
+      bloquearCamposPosConsulta(true);
+    });
+  */
+  
+  // Simulação: Verificar se existe algum valor nos campos pré-consulta
+  // (isso pode ser substituído pela chamada real ao backend)
+  const temPreSalva = verificarSeTemPreConsulta();
+  bloquearCamposPosConsulta(!temPreSalva);
+}
+
+// Função auxiliar para verificar se tem dados pré-consulta
+function verificarSeTemPreConsulta() {
+  // Esta função pode ser adaptada para verificar no localStorage,
+  // ou aguardar resposta do backend
+  const idConsulta = $('#idConsultaMedicoes').val();
+  
+  if (!idConsulta) return false;
+  
+  // Exemplo: Verificar no localStorage (temporário)
+  const medicoesPreSalvas = localStorage.getItem(`medicoes_pre_${idConsulta}`);
+  return medicoesPreSalvas !== null;
+}
+
+// Função para bloquear ou desbloquear campos pós-consulta
+function bloquearCamposPosConsulta(bloquear) {
+  const camposPosConsulta = [
+    '#medicoes_pos_pa',
+    '#medicoes_pos_glicemia',
+    '#medicoes_pos_dor',
+    '#medicoes_pos_o2',
+    '#medicoes_pos_bpm'
+  ];
+  
+  camposPosConsulta.forEach(campo => {
+    if (bloquear) {
+      $(campo).prop('disabled', true);
+      $(campo).attr('placeholder', 'Salve a pré-consulta primeiro');
+      $(campo).addClass('bg-light');
+    } else {
+      $(campo).prop('disabled', false);
+      $(campo).attr('placeholder', $(campo).data('placeholder-original') || 'Ex: valor');
+      $(campo).removeClass('bg-light');
+    }
+  });
+}
+
+// Salvar placeholders originais ao abrir o modal
+$('#modalMedicoesPaciente').on('shown.bs.modal', function() {
+  // Salvar placeholders originais
+  $('#medicoes_pos_pa').data('placeholder-original', 'Ex: 120/80');
+  $('#medicoes_pos_glicemia').data('placeholder-original', 'Ex: 95 mg/dL');
+  $('#medicoes_pos_dor').data('placeholder-original', 'Ex: 0-10');
+  $('#medicoes_pos_o2').data('placeholder-original', 'Ex: 98%');
+  $('#medicoes_pos_bpm').data('placeholder-original', 'Ex: 75 bpm');
+  
+  // Verificar se pré-consulta já foi salva
+  verificarPreConsultaSalva();
+});
+
+// Função auxiliar para formatar a exibição das medições (se necessário)
+function formatarMedicoes(medicoes) {
+  let texto = '';
+  
+  if (medicoes.preConsulta) {
+    texto += 'PRÉ-CONSULTA:\n';
+    if (medicoes.preConsulta.pressaoArterial) texto += `PA: ${medicoes.preConsulta.pressaoArterial}\n`;
+    if (medicoes.preConsulta.glicemia) texto += `Glicemia: ${medicoes.preConsulta.glicemia}\n`;
+    if (medicoes.preConsulta.escalaDor) texto += `Dor: ${medicoes.preConsulta.escalaDor}\n`;
+    if (medicoes.preConsulta.saturacaoO2) texto += `O₂: ${medicoes.preConsulta.saturacaoO2}\n`;
+    if (medicoes.preConsulta.frequenciaCardiaca) texto += `BPM: ${medicoes.preConsulta.frequenciaCardiaca}\n`;
+  }
+  
+  if (medicoes.posConsulta) {
+    texto += '\nPÓS-CONSULTA:\n';
+    if (medicoes.posConsulta.pressaoArterial) texto += `PA: ${medicoes.posConsulta.pressaoArterial}\n`;
+    if (medicoes.posConsulta.glicemia) texto += `Glicemia: ${medicoes.posConsulta.glicemia}\n`;
+    if (medicoes.posConsulta.escalaDor) texto += `Dor: ${medicoes.posConsulta.escalaDor}\n`;
+    if (medicoes.posConsulta.saturacaoO2) texto += `O₂: ${medicoes.posConsulta.saturacaoO2}\n`;
+    if (medicoes.posConsulta.frequenciaCardiaca) texto += `BPM: ${medicoes.posConsulta.frequenciaCardiaca}\n`;
+  }
+  
+  if (medicoes.observacao) {
+    texto += `\nObservações: ${medicoes.observacao}`;
+  }
+  
+  return texto;
+}
