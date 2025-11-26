@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class ViewController {
 
-    @GetMapping("/")
+    @GetMapping("/index")
     public String index() {
         return "index"; // Mapeia para o novo template index.html
     }
