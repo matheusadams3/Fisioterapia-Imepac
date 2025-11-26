@@ -1,5 +1,6 @@
 package com.adsimepac.fisioterapia.controller;
 
+import com.adsimepac.fisioterapia.dto.ConsultaDTO;
 import com.adsimepac.fisioterapia.model.Consulta;
 import com.adsimepac.fisioterapia.service.ConsultaService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,15 +27,15 @@ public class ConsultaController {
     public ResponseEntity<List<Map<String, Object>>> listarTodas(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime inicio,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime fim) {
-        
+
         List<Consulta> consultas;
-        
+
         if (inicio != null && fim != null) {
             consultas = consultaService.buscarPorPeriodo(inicio, fim);
         } else {
             consultas = consultaService.listarTodas();
         }
-        
+
         // Converte para formato JSON esperado pelo frontend
         List<Map<String, Object>> response = consultas.stream().map(c -> {
             Map<String, Object> map = new HashMap<>();
@@ -48,7 +49,7 @@ public class ConsultaController {
             map.put("observacoes", c.getObservacoes());
             return map;
         }).collect(Collectors.toList());
-        
+
         return ResponseEntity.ok(response);
     }
 
@@ -56,7 +57,7 @@ public class ConsultaController {
     public ResponseEntity<Consulta> buscarPorId(@PathVariable Long id) {
         Optional<Consulta> consulta = consultaService.buscarPorId(id);
         return consulta.map(ResponseEntity::ok)
-                       .orElse(ResponseEntity.notFound().build());
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping
@@ -67,9 +68,9 @@ public class ConsultaController {
             LocalDateTime dataFim = LocalDateTime.parse(dados.get("data_fim").toString());
             String tipoConsulta = dados.get("tipo_consulta") != null ? dados.get("tipo_consulta").toString() : "Consulta";
             String status = dados.get("status") != null ? dados.get("status").toString() : "sem_aula";
-            
+
             Consulta consulta = consultaService.criar(pacienteId, dataInicio, dataFim, tipoConsulta, status);
-            
+
             Map<String, Object> response = new HashMap<>();
             response.put("id", consulta.getId());
             response.put("paciente_id", consulta.getPaciente().getId());
@@ -78,7 +79,7 @@ public class ConsultaController {
             response.put("data_fim", consulta.getDataFim().toString());
             response.put("tipo_consulta", consulta.getTipoConsulta());
             response.put("status", consulta.getStatus());
-            
+
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (Exception e) {
             System.err.println("Erro ao criar consulta: " + e.getMessage());
@@ -91,13 +92,13 @@ public class ConsultaController {
     public ResponseEntity<Consulta> atualizar(@PathVariable Long id, @RequestBody Map<String, Object> dados) {
         try {
             Optional<Consulta> consultaOpt = consultaService.buscarPorId(id);
-            
+
             if (consultaOpt.isEmpty()) {
                 return ResponseEntity.notFound().build();
             }
-            
+
             Consulta consulta = consultaOpt.get();
-            
+
             if (dados.containsKey("data_inicio")) {
                 consulta.setDataInicio(LocalDateTime.parse(dados.get("data_inicio").toString()));
             }
@@ -113,7 +114,7 @@ public class ConsultaController {
             if (dados.containsKey("observacoes")) {
                 consulta.setObservacoes(dados.get("observacoes").toString());
             }
-            
+
             Consulta consultaAtualizada = consultaService.atualizar(id, consulta);
             return ResponseEntity.ok(consultaAtualizada);
         } catch (RuntimeException e) {
@@ -131,9 +132,34 @@ public class ConsultaController {
         }
     }
 
+    // ============================================================
+    // MÉTODO CORRIGIDO - USA DTO PARA EVITAR ERRO DE SERIALIZAÇÃO
+    // ============================================================
     @GetMapping("/paciente/{pacienteId}")
-    public ResponseEntity<List<Consulta>> buscarPorPaciente(@PathVariable Long pacienteId) {
-        List<Consulta> consultas = consultaService.buscarPorPaciente(pacienteId);
-        return ResponseEntity.ok(consultas);
+    public ResponseEntity<List<ConsultaDTO>> buscarPorPaciente(@PathVariable Long pacienteId) {
+        try {
+            List<Consulta> consultas = consultaService.buscarPorPaciente(pacienteId);
+
+            // Converte Consulta para ConsultaDTO
+            List<ConsultaDTO> consultasDTO = consultas.stream()
+                    .map(c -> new ConsultaDTO(
+                            c.getId(),
+                            c.getPaciente().getId(),
+                            c.getPaciente().getNomeCompleto(),
+                            c.getDataInicio(),
+                            c.getDataFim(),
+                            c.getTipoConsulta(),
+                            c.getStatus(),
+                            c.getObservacoes()
+                    ))
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(consultasDTO);
+
+        } catch (Exception e) {
+            System.err.println("Erro ao buscar consultas do paciente: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }

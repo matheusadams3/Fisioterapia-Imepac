@@ -14,18 +14,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const novosCampos = document.getElementById("novosCampos");
     const modalAdicionarPaciente = new bootstrap.Modal(document.getElementById("modalAdicionarPaciente"));
 
-    /* ---------------------- UTIL ------------------------------ */
-    // formata tempo "08:00:00" -> "08:00", aceita também "08:00"
-    function formatTimeForInput(t) {
-        if (!t) return "";
-        // se for ISO com fuso/extras, tenta extrair HH:mm
-        // exemplos: "08:00:00", "08:00", "08:00:00.000"
-        const m = t.match(/(\d{2}:\d{2})/);
-        return m ? m[1] : "";
-    }
+    // Variável global para armazenar o ID do paciente selecionado
+    let pacienteIdSelecionado = null;
 
     /* ---------------------- CARREGAR PACIENTES ---------------- */
-
     async function carregarPacientes() {
         try {
             const response = await fetch("/api/pacientes");
@@ -53,7 +45,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     /* ---------------------- CALCULAR IDADE -------------------- */
-
     function calcularIdade(dataNasc) {
         if (!dataNasc) return "—";
         const hoje = new Date();
@@ -65,6 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return idade;
     }
 
+    /* ---------------------- BUSCAR PACIENTES -------------------- */
     async function buscarPacientes(termo) {
         const endpoint = termo ? `/api/pacientes/search?termo=${encodeURIComponent(termo)}` : `/api/pacientes`;
 
@@ -94,15 +86,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     /* ---------------------- MONTAR LINHA ----------------------- */
-
     function criarLinhaPaciente(p) {
         const tr = document.createElement("tr");
-        
-        // Adiciona o ID do paciente como atributo data-id na linha
         tr.dataset.id = p.id;
 
         const idade = calcularIdade(p.dataNascimento);
-
         const diabetesIcon = p.possuiDiabetes ? `<i class="bi bi-star-fill text-primary me-1"></i>` : '';
         const hipertensoIcon = p.hipertenso ? `<i class="bi bi-star-fill text-danger me-1"></i>` : '';
 
@@ -122,6 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return tr;
     }
 
+    /* ---------------------- APLICAR FILTROS ---------------------- */
     document.querySelector("#offcanvasFiltros form").addEventListener("submit", function(e) {
         e.preventDefault();
         aplicarFiltros();
@@ -132,7 +121,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const faixa = document.getElementById("filtroIdade").value || null;
         const diabetes = document.getElementById("filtroDiabetes").value || null;
         const hipertenso = document.getElementById("filtroHipertenso").value || null;
-
         const search = document.getElementById("campoBusca")?.value || null;
         const tamanho = document.getElementById("selectTamanhoLista")?.value || null;
 
@@ -149,10 +137,10 @@ document.addEventListener("DOMContentLoaded", () => {
             .then(r => r.json())
             .then(lista => atualizarTabela(lista));
 
-            const offcanvas = bootstrap.Offcanvas.getInstance(
-                document.getElementById("offcanvasFiltros")
-            );
-            offcanvas.hide();
+        const offcanvas = bootstrap.Offcanvas.getInstance(
+            document.getElementById("offcanvasFiltros")
+        );
+        offcanvas.hide();
     }
 
     function atualizarTabela(pacientes) {
@@ -173,8 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    /* ---------------------- BUSCAR PACIENTE ---------------------- */
-
+    /* ---------------------- BUSCAR PACIENTE POR ID ---------------------- */
     async function buscarPacientePorId(id) {
         const resp = await fetch(`/api/pacientes/${id}`);
         if (!resp.ok) {
@@ -184,7 +171,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     /* ---------------------- PREENCHER MODAL EDIÇÃO ---------------------- */
-
     function preencherModalEdicao(paciente) {
         document.getElementById("idPaciente").value = paciente.id;
         document.getElementById("nomePaciente").value = paciente.nomeCompleto;
@@ -197,26 +183,28 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("generoPaciente").value = paciente.genero || "";
         document.getElementById("diabetesPaciente").checked = paciente.possuiDiabetes;
         document.getElementById("hptsPaciente").checked = paciente.hipertenso;
-        
-        // Mudar o título do modal
+
         document.querySelector("#modalAdicionarPaciente .modal-title").textContent = "Editar paciente";
     }
 
-    /* ---------------------- EXCLUIR PACIENTE --------------------- */
-
+    /* ========== ÚNICO LISTENER DE CLIQUES - GERENCIA TUDO ========== */
     document.addEventListener("click", async (e) => {
+        // 1. BOTÃO EXCLUIR
         const btnExcluir = e.target.closest(".btn-excluir");
-        const btnEditar = e.target.closest(".btn-editar");
-        
         if (btnExcluir) {
+            e.stopPropagation();
             if (!confirm("Deseja realmente excluir este paciente?")) return;
 
             const id = btnExcluir.dataset.id;
             await fetch(`/api/pacientes/${id}`, { method: "DELETE" });
-
             carregarPacientes();
-        } else if (btnEditar) {
-            e.stopPropagation(); // Impede que o clique chegue à linha da tabela
+            return;
+        }
+
+        // 2. BOTÃO EDITAR
+        const btnEditar = e.target.closest(".btn-editar");
+        if (btnEditar) {
+            e.stopPropagation();
             const id = btnEditar.dataset.id;
             try {
                 const paciente = await buscarPacientePorId(id);
@@ -227,20 +215,28 @@ document.addEventListener("DOMContentLoaded", () => {
                 console.error("Erro ao carregar paciente para edição:", error);
                 alert("Erro ao carregar paciente para edição.");
             }
+            return;
+        }
+
+        // 3. LINHA DA TABELA (abre ficha do paciente)
+        const linha = e.target.closest("#tabelaPacientes tr");
+        if (linha) {
+            const pacienteId = linha.dataset.id;
+
+            if (!pacienteId || pacienteId === 'undefined') {
+                console.error('ID do paciente inválido');
+                return;
+            }
+
+            pacienteIdSelecionado = pacienteId;
+            carregarFichaPaciente(pacienteId);
+
+            const modal = new bootstrap.Modal(document.getElementById("modalFichaPaciente"));
+            modal.show();
         }
     });
 
-    /* ---------------------- CAMPOS DINÂMICOS --------------------- */
-
-    btnAdicionarCampo.addEventListener("click", () => {
-        const div = document.createElement("div");
-        div.classList.add("col-md-6", "mt-2");
-        div.innerHTML = `<input type="text" class="form-control" placeholder="Novo campo personalizado">`;
-        novosCampos.appendChild(div);
-    });
-
     /* ---------------------- SALVAR PACIENTE ---------------------- */
-
     form.addEventListener("submit", async (event) => {
         event.preventDefault();
 
@@ -256,7 +252,7 @@ document.addEventListener("DOMContentLoaded", () => {
             sobrePaciente: document.getElementById("sobrePaciente").value || null,
             genero: document.getElementById("generoPaciente").value || null,
             possuiDiabetes: document.getElementById("diabetesPaciente").checked,
-            hipertenso: document.getElementById("hptsPaciente").checked, // Adicionado campo hipertenso
+            hipertenso: document.getElementById("hptsPaciente").checked,
         };
 
         const metodo = id ? "PUT" : "POST";
@@ -276,144 +272,282 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-    modalAdicionarPaciente.hide();
-    form.reset();
-    document.querySelector("#modalAdicionarPaciente .modal-title").textContent = "Adicionar paciente"; // Resetar título
-    carregarPacientes();
+            modalAdicionarPaciente.hide();
+            form.reset();
+            document.querySelector("#modalAdicionarPaciente .modal-title").textContent = "Adicionar paciente";
+            carregarPacientes();
         } catch (err) {
             console.error("Erro na requisição:", err);
             alert("Erro de rede ao salvar paciente. Veja console.");
         }
     });
 
-     /* ----------------- MODAL REGISTRO DE PACIENTES --------------- */
-     document.getElementById("tabelaPacientes").addEventListener("click", function (e) {
+    /* ----------------- CARREGAR FICHA DO PACIENTE --------------- */
+    async function carregarFichaPaciente(pacienteId) {
+        try {
+            const resp = await fetch(`/api/pacientes/${pacienteId}`);
+            if (!resp.ok) {
+                throw new Error("Erro ao buscar dados do paciente");
+            }
+            const paciente = await resp.json();
 
-       if (e.target.closest(".btn-excluir") || e.target.closest(".btn-editar")) return;
+            document.getElementById("fichaNomePaciente").textContent = paciente.nomeCompleto || "—";
+            document.getElementById("fichaDataNascimento").textContent = paciente.dataNascimento || "—";
+            document.getElementById("fichaGeneroPaciente").textContent = paciente.genero || "—";
+            document.getElementById("fichaTelefonePaciente").textContent = paciente.telefone || "—";
+            document.getElementById("fichaTelefone2Paciente").textContent = paciente.telefoneSecundario || "—";
+            document.getElementById("fichaEnderecoPaciente").textContent = paciente.endereco || "—";
+            document.getElementById("fichaSobrePaciente").textContent = paciente.sobrePaciente || "—";
+            document.getElementById("fichaObservacoesPaciente").textContent = paciente.observacoesGerais || "—";
 
-       const linha = e.target.closest("tr");
-       if (!linha) return;
+            carregarConsultasPaciente(pacienteId);
 
-       const pacienteId = linha.dataset.id;
-       
-       // Validação do ID do paciente
-       if (!pacienteId || pacienteId === 'undefined') {
-         console.error('ID do paciente inválido');
-         return;
-       }
-       
-       document.getElementById("idPacienteRegistro").value = pacienteId;
-       
-       // Resetar estado do modal antes de abrir
-       resetarModalRegistro();
-       
-       // Carregar dados do paciente e última medição
-       carregarDadosPaciente(pacienteId);
+        } catch (err) {
+            console.error("Erro ao carregar ficha do paciente:", err);
+            alert("Erro ao carregar dados do paciente.");
+        }
+    }
 
-       const modal = new bootstrap.Modal(
-         document.getElementById("modalRegistroPaciente")
-       );
-       modal.show();
+    /* ----------------- CARREGAR CONSULTAS DO PACIENTE --------------- */
+    async function carregarConsultasPaciente(pacienteId) {
+        const listaConsultas = document.getElementById("listaConsultasPaciente");
+
+        listaConsultas.innerHTML = `
+            <div class="text-center text-muted p-4">
+                <div class="spinner-border spinner-border-sm me-2" role="status">
+                    <span class="visually-hidden">Carregando...</span>
+                </div>
+                Carregando consultas...
+            </div>
+        `;
+
+        try {
+            const resp = await fetch(`/api/consultas/paciente/${pacienteId}`);
+
+            if (!resp.ok) {
+                if (resp.status === 404) {
+                    listaConsultas.innerHTML = `
+                        <div class="text-center text-muted p-4">
+                            <i class="bi bi-calendar-x fs-1 d-block mb-2"></i>
+                            <p>Nenhuma consulta agendada</p>
+                        </div>
+                    `;
+                    return;
+                }
+                throw new Error(`Erro ${resp.status}: ${resp.statusText}`);
+            }
+
+            const consultas = await resp.json();
+
+            if (!consultas || consultas.length === 0) {
+                listaConsultas.innerHTML = `
+                    <div class="text-center text-muted p-4">
+                        <i class="bi bi-calendar-x fs-1 d-block mb-2"></i>
+                        <p>Nenhuma consulta agendada</p>
+                    </div>
+                `;
+                return;
+            }
+
+            consultas.sort((a, b) => new Date(a.dataInicio) - new Date(b.dataInicio));
+
+            listaConsultas.innerHTML = consultas.map(consulta => {
+                const dataInicio = new Date(consulta.dataInicio);
+                const dataFim = new Date(consulta.dataFim);
+                const dataFormatada = dataInicio.toLocaleDateString('pt-BR');
+                const horaInicio = dataInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                const horaFim = dataFim.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+                const status = consulta.status || 'sem_aula';
+                const statusNomes = {
+                    'sem_aula': 'Agendada',
+                    'presenca': 'Presente',
+                    'falta': 'Falta',
+                    'falta_justificada': 'Falta Justificada',
+                    'alta_temporaria': 'Alta Temporária'
+                };
+                const statusCores = {
+                    'sem_aula': 'secondary',
+                    'presenca': 'success',
+                    'falta': 'danger',
+                    'falta_justificada': 'warning',
+                    'alta_temporaria': 'info'
+                };
+
+                return `
+                    <div class="consulta-item ${status} mb-3 p-3 border rounded" style="background-color: white;">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="consulta-tipo fw-bold">${consulta.tipoConsulta || 'Consulta'}</div>
+                            <span class="badge bg-${statusCores[status]} badge-status">
+                                ${statusNomes[status]}
+                            </span>
+                        </div>
+                        <div class="consulta-data text-muted mb-1">
+                            <i class="bi bi-calendar3 me-1"></i>${dataFormatada}
+                        </div>
+                        <div class="consulta-data text-muted">
+                            <i class="bi bi-clock me-1"></i>${horaInicio} - ${horaFim}
+                        </div>
+                        ${consulta.observacoes ? `
+                            <div class="consulta-data text-muted mt-2">
+                                <i class="bi bi-chat-left-text me-1"></i>${consulta.observacoes}
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+
+        } catch (err) {
+            console.error("Erro ao carregar consultas:", err);
+
+            listaConsultas.innerHTML = `
+                <div class="text-center text-danger p-4">
+                    <i class="bi bi-exclamation-triangle fs-1 d-block mb-2"></i>
+                    <p class="mb-2">Erro ao carregar consultas</p>
+                    <small class="text-muted">${err.message}</small>
+                    <button class="btn btn-sm btn-outline-primary mt-3" onclick="window.carregarConsultasPaciente(${pacienteId})">
+                        <i class="bi bi-arrow-clockwise me-1"></i>Tentar novamente
+                    </button>
+                </div>
+            `;
+        }
+    }
+
+    window.carregarConsultasPaciente = carregarConsultasPaciente;
+
+     document.getElementById("btnEditarFicha").addEventListener("click", async () => {
+         if (!pacienteIdSelecionado) return;
+
+         const modalFicha = bootstrap.Modal.getInstance(document.getElementById("modalFichaPaciente"));
+         if (modalFicha) modalFicha.hide();
+
+         try {
+             const paciente = await buscarPacientePorId(pacienteIdSelecionado);
+             preencherModalEdicao(paciente);
+
+             const modalAdicionar = new bootstrap.Modal(document.getElementById("modalAdicionarPaciente"));
+             modalAdicionar.show();
+         } catch (err) {
+             console.error("Erro ao carregar paciente para edição:", err);
+             alert("Erro ao carregar paciente para edição.");
+         }
      });
 
-     /* ----------------- FUNÇÕES DO MODAL DE REGISTRO --------------- */
-     
-     function resetarModalRegistro() {
-       // Limpar todos os campos de medição atual
-       document.querySelectorAll('[id^="atual_"]').forEach((input) => {
-         input.value = "";
-         input.disabled = true;
-       });
-       
-       // Resetar botões para estado inicial
-       document.getElementById("btnEditar").classList.remove("d-none");
-       document.getElementById("btnSalvar").classList.add("d-none");
-     }
-     
-     function habilitarEdicao() {
-       // habilita todos os campos da medição atual
-       document.querySelectorAll('[id^="atual_"]').forEach((input) => {
-         input.disabled = false;
-       });
+    /* ----------------- BOTÃO PRÓXIMO - ABRE MODAL DE REGISTRO --------------- */
+   document.getElementById("btnProximoFicha").addEventListener("click", () => {
+       if (!pacienteIdSelecionado) return;
 
-       // troca os botões
-       document.getElementById("btnEditar").classList.add("d-none");
-       document.getElementById("btnSalvar").classList.remove("d-none");
-     }
-     async function salvarMedicao() {
-       const pacienteId = document.getElementById("idPacienteRegistro").value; // ID do paciente deve estar no modal
-       
-       const registro = {
-         pressaoArterial: document.getElementById("atual_pa").value || null,
-         glicemia: document.getElementById("atual_glicemia").value || null,
-         escalaDor: document.getElementById("atual_dor").value || null,
-         saturacaoO2: document.getElementById("atual_o2").value || null,
-         bpm: document.getElementById("atual_bpm").value || null,
-         observacao: document.getElementById("atual_obs").value || null,
-       };
+       const modalFicha = bootstrap.Modal.getInstance(document.getElementById("modalFichaPaciente"));
+       modalFicha.hide();
 
-       try {
-         const resp = await fetch(`/api/registros/paciente/${pacienteId}`, {
-           method: "POST",
-           headers: { "Content-Type": "application/json" },
-           body: JSON.stringify(registro),
-         });
+       // Abrir modal de registro após fechar ficha
+       modalFicha._element.addEventListener('hidden.bs.modal', () => {
+           document.getElementById("idPacienteRegistro").value = pacienteIdSelecionado;
+           resetarModalRegistro();
+           carregarDadosPaciente(pacienteIdSelecionado);
 
-         if (!resp.ok) {
-           const text = await resp.text();
-           console.error("Erro ao salvar medição:", resp.status, text);
-           alert("Erro ao salvar medição. Veja console para detalhes.");
-           return;
-         }
+           const modalRegistro = new bootstrap.Modal(document.getElementById("modalRegistroPaciente"));
+           modalRegistro.show();
+       }, { once: true });
+   });
 
-         alert("Medição salva com sucesso!");
-         
-         // Limpar campos de medição atual
-         document.querySelectorAll('[id^="atual_"]').forEach((input) => {
-           input.value = "";
-           input.disabled = true;
-         });
+    /* ----------------- MODAL DE REGISTRO - FUNÇÕES --------------- */
+    function resetarModalRegistro() {
+        document.querySelectorAll('[id^="atual_"]').forEach((input) => {
+            input.value = "";
+            input.disabled = true;
+        });
 
-         // Resetar botões
-         document.getElementById("btnSalvar").classList.add("d-none");
-         document.getElementById("btnEditar").classList.remove("d-none");
-         
-         // Recarrega os dados do paciente para atualizar a última medição
-         carregarDadosPaciente(pacienteId); 
+        document.getElementById("btnEditar").classList.remove("d-none");
+        document.getElementById("btnSalvar").classList.add("d-none");
+    }
 
-       } catch (err) {
-         console.error("Erro na requisição:", err);
-         alert("Erro de rede ao salvar medição. Veja console.");
-       }
-     }
-     document.getElementById("btnEditar").addEventListener("click", habilitarEdicao);
-     document.getElementById("btnSalvar").addEventListener("click", salvarMedicao);
+    function habilitarEdicao() {
+        document.querySelectorAll('[id^="atual_"]').forEach((input) => {
+            input.disabled = false;
+        });
 
-     // Código de modal adicional removido para evitar erros
+        document.getElementById("btnEditar").classList.add("d-none");
+        document.getElementById("btnSalvar").classList.remove("d-none");
+    }
 
-     async function carregarDadosPaciente(pacienteId) {
-       // 1. Carregar última medição
-       try {
-         const resp = await fetch(`/api/registros/paciente/${pacienteId}/ultima`);
-         if (resp.ok) {
-           const ultimaMedicao = await resp.json();
-           document.getElementById("ultima_pa").value = ultimaMedicao.pressaoArterial || "";
-           document.getElementById("ultima_glicemia").value = ultimaMedicao.glicemia || "";
-           document.getElementById("ultima_dor").value = ultimaMedicao.escalaDor || "";
-           document.getElementById("ultima_o2").value = ultimaMedicao.saturacaoO2 || "";
-           document.getElementById("ultima_bpm").value = ultimaMedicao.bpm || "";
-           document.getElementById("ultima_obs").value = ultimaMedicao.observacao || "";
-         } else {
-           // Limpar campos se não houver última medição
-           document.getElementById("ultima_pa").value = "";
-           document.getElementById("ultima_glicemia").value = "";
-           document.getElementById("ultima_dor").value = "";
-           document.getElementById("ultima_o2").value = "";
-           document.getElementById("ultima_bpm").value = "";
-           document.getElementById("ultima_obs").value = "";
-         }
-       } catch (err) {
-         console.error("Erro ao carregar última medição:", err);
-       }
-     }
+    async function salvarMedicao() {
+        const pacienteId = document.getElementById("idPacienteRegistro").value;
+
+        const registro = {
+            pressaoArterial: document.getElementById("atual_pa").value || null,
+            glicemia: document.getElementById("atual_glicemia").value || null,
+            escalaDor: document.getElementById("atual_dor").value || null,
+            saturacaoO2: document.getElementById("atual_o2").value || null,
+            bpm: document.getElementById("atual_bpm").value || null,
+            observacao: document.getElementById("atual_obs").value || null,
+        };
+
+        try {
+            const resp = await fetch(`/api/registros/paciente/${pacienteId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(registro),
+            });
+
+            if (!resp.ok) {
+                const text = await resp.text();
+                console.error("Erro ao salvar medição:", resp.status, text);
+                alert("Erro ao salvar medição. Veja console para detalhes.");
+                return;
+            }
+
+            alert("Medição salva com sucesso!");
+
+            document.querySelectorAll('[id^="atual_"]').forEach((input) => {
+                input.value = "";
+                input.disabled = true;
+            });
+
+            document.getElementById("btnSalvar").classList.add("d-none");
+            document.getElementById("btnEditar").classList.remove("d-none");
+
+            carregarDadosPaciente(pacienteId);
+
+        } catch (err) {
+            console.error("Erro na requisição:", err);
+            alert("Erro de rede ao salvar medição. Veja console.");
+        }
+    }
+
+    document.getElementById("btnEditar").addEventListener("click", habilitarEdicao);
+    document.getElementById("btnSalvar").addEventListener("click", salvarMedicao);
+
+    async function carregarDadosPaciente(pacienteId) {
+        try {
+            const respPaciente = await fetch(`/api/pacientes/${pacienteId}`);
+            if (respPaciente.ok) {
+                const paciente = await respPaciente.json();
+                const colunaHeader = document.querySelector("#modalRegistroPaciente .row.fw-semibold .col-4:first-child");
+                if (colunaHeader) {
+                    colunaHeader.textContent = paciente.nomeCompleto;
+                }
+            }
+
+            const resp = await fetch(`/api/registros/paciente/${pacienteId}/ultima`);
+            if (resp.ok) {
+                const ultimaMedicao = await resp.json();
+                document.getElementById("ultima_pa").value = ultimaMedicao.pressaoArterial || "";
+                document.getElementById("ultima_glicemia").value = ultimaMedicao.glicemia || "";
+                document.getElementById("ultima_dor").value = ultimaMedicao.escalaDor || "";
+                document.getElementById("ultima_o2").value = ultimaMedicao.saturacaoO2 || "";
+                document.getElementById("ultima_bpm").value = ultimaMedicao.bpm || "";
+                document.getElementById("ultima_obs").value = ultimaMedicao.observacao || "";
+            } else {
+                document.getElementById("ultima_pa").value = "";
+                document.getElementById("ultima_glicemia").value = "";
+                document.getElementById("ultima_dor").value = "";
+                document.getElementById("ultima_o2").value = "";
+                document.getElementById("ultima_bpm").value = "";
+                document.getElementById("ultima_obs").value = "";
+            }
+        } catch (err) {
+            console.error("Erro ao carregar dados do paciente:", err);
+        }
+    }
 });
