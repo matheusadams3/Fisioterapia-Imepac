@@ -433,6 +433,88 @@ document.addEventListener("DOMContentLoaded", () => {
          }
      });
 
+
+     /*BOTÃO HISTÓRICO - ABRE O MODAL DE HISTORICO*/
+     document.getElementById("btnHistorico").addEventListener("click", () => {
+         if (!pacienteIdSelecionado) return;
+
+         carregarHistoricoConsultasPaciente(pacienteIdSelecionado);
+
+         const modal = new bootstrap.Modal(document.getElementById("modalHistoricoConsultas"));
+         modal.show();
+     });
+
+     async function carregarHistoricoConsultasPaciente(pacienteId) {
+         const container = document.querySelector("#modalHistoricoConsultas .modal-body .d-flex");
+         container.innerHTML = `
+             <div class="text-center text-muted p-4">
+                 <div class="spinner-border spinner-border-sm me-2" role="status">
+                     <span class="visually-hidden">Carregando...</span>
+                 </div>
+                 Carregando histórico...
+             </div>
+         `;
+
+         try {
+             // Buscar consultas desse paciente
+             const resp = await fetch(`/api/consultas/paciente/${pacienteId}`);
+             if (!resp.ok) throw new Error("Erro ao carregar consultas: " + resp.status);
+             const consultas = await resp.json();
+
+             container.innerHTML = "";
+
+             if (!consultas || consultas.length === 0) {
+                 container.innerHTML = `
+                     <div class="text-center text-muted p-4">
+                         Nenhuma consulta encontrada para este paciente.
+                     </div>
+                 `;
+                 return;
+             }
+
+             consultas.sort((a, b) => new Date(a.dataInicio) - new Date(b.dataInicio));
+
+             // Criar cards para cada consulta
+             consultas.forEach(c => {
+                 const card = document.createElement("div");
+                 card.className = "border rounded p-3";
+                 card.style.minWidth = "250px";
+                 card.style.height = "500px"; // Maior para caber 8 campos
+                 card.style.backgroundColor = "#f8f9fa";
+
+                 const dataInicio = new Date(c.dataInicio);
+                 const dataFim = new Date(c.dataFim);
+                 const dataFormatada = dataInicio.toLocaleDateString('pt-BR');
+                 const horaInicio = dataInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                 const horaFim = dataFim.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
+                 card.innerHTML = `
+                     <h6 class="fw-bold mb-3">Consulta: ${c.tipoConsulta || '—'}</h6>
+                     <div class="mb-2"><strong>Data:</strong> ${dataFormatada}</div>
+                     <div class="mb-2"><strong>Horário:</strong> ${horaInicio} - ${horaFim}</div>
+                     <div class="mb-2"><strong>PA:</strong> ${c.pressaoArterial || '—'}</div>
+                     <div class="mb-2"><strong>Glicemia:</strong> ${c.glicemia || '—'}</div>
+                     <div class="mb-2"><strong>Dor:</strong> ${c.escalaDor || '—'}</div>
+                     <div class="mb-2"><strong>Saturação O2:</strong> ${c.saturacaoO2 || '—'}</div>
+                     <div class="mb-2"><strong>BPM:</strong> ${c.bpm || '—'}</div>
+                     <div class="mb-2"><strong>Observações:</strong> ${c.observacao || '—'}</div>
+                 `;
+
+                 container.appendChild(card);
+             });
+
+         } catch (err) {
+             console.error(err);
+             container.innerHTML = `
+                 <div class="text-center text-danger p-4">
+                     Erro ao carregar histórico: ${err.message}
+                 </div>
+             `;
+         }
+     }
+
+
+
     /* ----------------- BOTÃO PRÓXIMO - ABRE MODAL DE REGISTRO --------------- */
    document.getElementById("btnProximoFicha").addEventListener("click", () => {
        if (!pacienteIdSelecionado) return;

@@ -499,9 +499,15 @@
                 <!-- Coluna Direita: Consultas (40%) -->
                 <div class="col-md-5">
                   <div class="border rounded p-3" style="background-color: #f8f9fa; height: 100%;">
-                    <h6 class="fw-bold mb-3">
-                      <i class="bi bi-calendar-check me-2"></i>Consultas Agendadas
-                    </h6>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                      <h6 class="fw-bold m-0">
+                        <i class="bi bi-calendar-check me-2"></i>Consultas Agendadas
+                      </h6>
+
+                      <button class="btn btn-primary btn-sm" id="btnHistorico">
+                        <i class="bi bi-clock-history me-1"></i>Histórico
+                      </button>
+                    </div>
 
                     <!-- Lista de Consultas -->
                     <div id="listaConsultasPaciente" style="max-height: 400px; overflow-y: auto;">
@@ -519,6 +525,54 @@
           <div class="modal-footer border-0 justify-content-end">
             <button id="btnEditarFicha" type="button" class="btn btn-primary me-2">Editar</button>
             <button id="btnProximoFicha" type="button" class="btn btn-secondary">Próximo</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Histórico de Consultas -->
+    <div class="modal fade" id="modalHistoricoConsultas" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-xl modal-dialog-centered" style="max-width: 1400px;">
+        <div class="modal-content p-3">
+
+          <!-- Cabeçalho -->
+          <div class="modal-header border-0 pb-0">
+            <h5 class="modal-title fw-semibold">Histórico de Consultas</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+
+          <!-- Corpo -->
+          <div class="modal-body">
+            <div class="d-flex flex-row gap-3 overflow-auto pb-3">
+
+              <!-- Card de exemplo -->
+              <div class="border rounded p-3" style="min-width: 250px; height: 400px; background-color: #f8f9fa;">
+                <h6 class="fw-bold mb-3">Paciente: Kelvyn</h6>
+                <div class="mb-2"><strong>Data:</strong>27/07/2004</div>
+                <div class="mb-2"><strong>Horario:</strong>Meio dias pras 4</div>
+                <div class="mb-2"><strong>PA:</strong>200</div>
+                <div class="mb-2"><strong>Glicemia:</strong>Sim</div>
+                <div class="mb-2"><strong>Dor:</strong>Não</div>
+                <div class="mb-2"><strong>O2:</strong></div>
+                <div class="mb-2"><strong>BPM:</strong> 350</div>
+                <div class="mb-2"><strong>Obs:</strong> Morrendo</div>
+              </div>
+
+              <!-- Outro card -->
+              <div class="border rounded p-3" style="min-width: 250px; height: 400px; background-color: #f8f9fa;">
+                <h6 class="fw-bold mb-3">Paciente: Maria</h6>
+                <div class="mb-2"><strong>Idade:</strong> 32</div>
+                <div class="mb-2"><strong>Telefone:</strong> (11) 98888-8888</div>
+                <div class="mb-2"><strong>Endereço:</strong> Rua XYZ, 456</div>
+                <div class="mb-2"><strong>Diabetes:</strong> Não</div>
+                <div class="mb-2"><strong>Hipertenso:</strong> Sim</div>
+                <div class="mb-2"><strong>Última Consulta:</strong> 18/11/2025</div>
+                <div class="mb-2"><strong>Observações:</strong> Tomando medicação</div>
+                <div class="mb-2"><strong>Status:</strong> Ativo</div>
+              </div>
+
+              <!-- Adicione quantos cards quiser -->
+            </div>
           </div>
         </div>
       </div>
