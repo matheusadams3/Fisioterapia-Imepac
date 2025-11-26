@@ -365,6 +365,13 @@
           <div class="modal-footer">
             <button
               type="button"
+              class="btn btn-secondary"
+              id="btnMedicoesPaciente"
+            >
+              Medições
+            </button>
+            <button
+              type="button"
               class="btn btn-primary"
               id="btnEditarConsulta"
             >
@@ -381,6 +388,80 @@
         </div>
       </div>
     </div>
+
+    
+
+<!-- Modal Medições Paciente -->
+<div
+  class="modal fade"
+  id="modalMedicoesPaciente"
+  tabindex="-1"
+  aria-hidden="true"
+>
+  <div
+    class="modal-dialog modal-dialog-centered modal-lg"
+  >
+    <div class="modal-content p-3">
+      <!-- Cabeçalho -->
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold">Adicionar Medições do Paciente</h5>
+        <input type="hidden" id="idPacienteMedicoes" value="" />
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Nome do Paciente -->
+        <div class="mb-4">
+          <h6 class="fw-semibold">Paciente: <span id="nomePacienteMedicoes" class="text-primary">-</span></h6>
+        </div>
+
+        <!-- LINHAS DO REGISTRO -->
+        <div class="row gy-3">
+          <!-- Nomes dos campos -->
+          <div class="col-6 d-flex flex-column custom-gap">
+            <span class="label-row">Pressão Arterial (PA)</span>
+            <span class="label-row">Glicemia</span>
+            <span class="label-row">Escala de Dor</span>
+            <span class="label-row">O₂ (Saturação)</span>
+            <span class="label-row">BPM (Frequência Cardíaca)</span>
+            <span class="label-row">Observação</span>
+          </div>
+
+          <!-- Medição atual -->
+          <div class="col-6 d-flex flex-column gap-3">
+            <input id="medicoes_atual_pa" class="form-control" placeholder="Ex: 120/80" />
+            <input id="medicoes_atual_glicemia" class="form-control" placeholder="Ex: 95 mg/dL" />
+            <input id="medicoes_atual_dor" class="form-control" placeholder="Ex: 0-10" />
+            <input id="medicoes_atual_o2" class="form-control" placeholder="Ex: 98%" />
+            <input id="medicoes_atual_bpm" class="form-control" placeholder="Ex: 75 bpm" />
+            <textarea id="medicoes_atual_obs" class="form-control" rows="2" placeholder="Observações adicionais..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rodapé -->
+      <div class="modal-footer border-0">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-bs-dismiss="modal"
+        >
+          Cancelar
+        </button>
+        <button
+          id="btnSalvarMedicoes"
+          class="btn btn-primary"
+        >
+          Salvar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
