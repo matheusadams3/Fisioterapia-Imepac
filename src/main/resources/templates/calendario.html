@@ -398,14 +398,13 @@
   tabindex="-1"
   aria-hidden="true"
 >
-  <div
-    class="modal-dialog modal-dialog-centered modal-lg"
-  >
+  <div class="modal-dialog modal-dialog-centered modal-xl">
     <div class="modal-content p-3">
       <!-- Cabeçalho -->
       <div class="modal-header border-0 pb-0">
         <h5 class="modal-title fw-bold">Adicionar Medições do Paciente</h5>
         <input type="hidden" id="idPacienteMedicoes" value="" />
+        <input type="hidden" id="idConsultaMedicoes" value="" />
         <button
           type="button"
           class="btn-close"
@@ -419,26 +418,147 @@
           <h6 class="fw-semibold">Paciente: <span id="nomePacienteMedicoes" class="text-primary">-</span></h6>
         </div>
 
-        <!-- LINHAS DO REGISTRO -->
+        <!-- TABELA DE MEDIÇÕES -->
         <div class="row gy-3">
-          <!-- Nomes dos campos -->
-          <div class="col-6 d-flex flex-column custom-gap">
-            <span class="label-row">Pressão Arterial (PA)</span>
-            <span class="label-row">Glicemia</span>
-            <span class="label-row">Escala de Dor</span>
-            <span class="label-row">O₂ (Saturação)</span>
-            <span class="label-row">BPM (Frequência Cardíaca)</span>
-            <span class="label-row">Observação</span>
+          <!-- Cabeçalhos -->
+          <div class="col-12">
+            <div class="row fw-semibold text-center mb-2">
+              <div class="col-4"></div>
+              <div class="col-4 text-primary">Pré-Consulta</div>
+              <div class="col-4 text-success">Pós-Consulta</div>
+            </div>
           </div>
 
-          <!-- Medição atual -->
-          <div class="col-6 d-flex flex-column gap-3">
-            <input id="medicoes_atual_pa" class="form-control" placeholder="Ex: 120/80" />
-            <input id="medicoes_atual_glicemia" class="form-control" placeholder="Ex: 95 mg/dL" />
-            <input id="medicoes_atual_dor" class="form-control" placeholder="Ex: 0-10" />
-            <input id="medicoes_atual_o2" class="form-control" placeholder="Ex: 98%" />
-            <input id="medicoes_atual_bpm" class="form-control" placeholder="Ex: 75 bpm" />
-            <textarea id="medicoes_atual_obs" class="form-control" rows="2" placeholder="Observações adicionais..."></textarea>
+          <!-- Pressão Arterial -->
+          <div class="col-12">
+            <div class="row align-items-center">
+              <div class="col-4">
+                <label class="form-label mb-0 fw-semibold">Pressão Arterial (PA)</label>
+              </div>
+              <div class="col-4">
+                <input 
+                  id="medicoes_pre_pa" 
+                  class="form-control" 
+                  placeholder="Ex: 120/80" 
+                />
+              </div>
+              <div class="col-4">
+                <input 
+                  id="medicoes_pos_pa" 
+                  class="form-control" 
+                  placeholder="Ex: 120/80" 
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Glicemia -->
+          <div class="col-12">
+            <div class="row align-items-center">
+              <div class="col-4">
+                <label class="form-label mb-0 fw-semibold">Glicemia</label>
+              </div>
+              <div class="col-4">
+                <input 
+                  id="medicoes_pre_glicemia" 
+                  class="form-control" 
+                  placeholder="Ex: 95 mg/dL" 
+                />
+              </div>
+              <div class="col-4">
+                <input 
+                  id="medicoes_pos_glicemia" 
+                  class="form-control" 
+                  placeholder="Ex: 95 mg/dL" 
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Escala de Dor -->
+          <div class="col-12">
+            <div class="row align-items-center">
+              <div class="col-4">
+                <label class="form-label mb-0 fw-semibold">Escala de Dor</label>
+              </div>
+              <div class="col-4">
+                <input 
+                  id="medicoes_pre_dor" 
+                  class="form-control" 
+                  placeholder="Ex: 0-10" 
+                  type="number"
+                  min="0"
+                  max="10"
+                />
+              </div>
+              <div class="col-4">
+                <input 
+                  id="medicoes_pos_dor" 
+                  class="form-control" 
+                  placeholder="Ex: 0-10" 
+                  type="number"
+                  min="0"
+                  max="10"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Saturação O2 -->
+          <div class="col-12">
+            <div class="row align-items-center">
+              <div class="col-4">
+                <label class="form-label mb-0 fw-semibold">O₂ (Saturação)</label>
+              </div>
+              <div class="col-4">
+                <input 
+                  id="medicoes_pre_o2" 
+                  class="form-control" 
+                  placeholder="Ex: 98%" 
+                />
+              </div>
+              <div class="col-4">
+                <input 
+                  id="medicoes_pos_o2" 
+                  class="form-control" 
+                  placeholder="Ex: 98%" 
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- BPM -->
+          <div class="col-12">
+            <div class="row align-items-center">
+              <div class="col-4">
+                <label class="form-label mb-0 fw-semibold">BPM (Frequência Cardíaca)</label>
+              </div>
+              <div class="col-4">
+                <input 
+                  id="medicoes_pre_bpm" 
+                  class="form-control" 
+                  placeholder="Ex: 75 bpm" 
+                />
+              </div>
+              <div class="col-4">
+                <input 
+                  id="medicoes_pos_bpm" 
+                  class="form-control" 
+                  placeholder="Ex: 75 bpm" 
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Observações -->
+          <div class="col-12 mt-4">
+            <label class="form-label fw-semibold">Observações Gerais</label>
+            <textarea 
+              id="medicoes_observacao" 
+              class="form-control" 
+              rows="3" 
+              placeholder="Observações adicionais sobre a consulta..."
+            ></textarea>
           </div>
         </div>
       </div>
@@ -456,7 +576,7 @@
           id="btnSalvarMedicoes"
           class="btn btn-primary"
         >
-          Salvar
+          Salvar Medições
         </button>
       </div>
     </div>
